@@ -63,15 +63,46 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: isDev
   },
 
-  // Cache headers for static assets
+  // Cache headers for static assets - reduces data transfer and edge requests
   async headers() {
     return [
       {
+        // Audio files - immutable, cache forever
         source: '/sounds/:path*',
         headers: [
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable'
+          }
+        ]
+      },
+      {
+        // JSON data files (kanji, vocab, facts) - cache for 1 week
+        source: '/:path*.json',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=604800, stale-while-revalidate=86400'
+          }
+        ]
+      },
+      {
+        // Wallpapers and images - immutable
+        source: '/wallpapers/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
+          }
+        ]
+      },
+      {
+        // Manifest and other static files
+        source: '/manifest.json',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, stale-while-revalidate=3600'
           }
         ]
       }

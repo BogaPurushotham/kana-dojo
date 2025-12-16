@@ -46,6 +46,29 @@ const kanjiSources = ['N5', 'N4', 'N3'] as const;
 
 const shuffle = <T,>(arr: T[]) => arr.slice().sort(() => Math.random() - 0.5);
 
+// Module-level cache for kanji characters - prevents refetching on every mount
+let kanjiCharsCache: string[] | null = null;
+let kanjiLoadingPromise: Promise<string[]> | null = null;
+
+const loadKanjiChars = async (): Promise<string[]> => {
+  if (kanjiCharsCache) return kanjiCharsCache;
+  if (kanjiLoadingPromise) return kanjiLoadingPromise;
+
+  kanjiLoadingPromise = Promise.all(
+    kanjiSources.map(async level => {
+      const response = await fetch(`/kanji/${level}.json`);
+      const data = (await response.json()) as RawKanjiEntry[];
+      return data.map(entry => entry.kanjiChar);
+    })
+  ).then(results => {
+    kanjiCharsCache = results.flat();
+    kanjiLoadingPromise = null;
+    return kanjiCharsCache;
+  });
+
+  return kanjiLoadingPromise;
+};
+
 // Tailwind animations
 const animations = [
   'motion-safe:animate-pulse'
@@ -63,7 +86,7 @@ const getAllMainColors = () => {
       if (theme.secondaryColor) colors.add(theme.secondaryColor);
     });
   }); */
-  themeSets[2].themes.forEach((theme) => {
+  themeSets[2].themes.forEach(theme => {
     colors.add(theme.mainColor);
     if (theme.secondaryColor) colors.add(theme.secondaryColor);
   });
@@ -87,7 +110,7 @@ const loadDecorationFonts = async (
   if (fontsCache) return fontsCache;
   if (fontsLoadingPromise) return fontsLoadingPromise;
 
-  fontsLoadingPromise = import('./decorationFonts').then((module) => {
+  fontsLoadingPromise = import('./decorationFonts').then(module => {
     fontsCache = module.decorationFonts;
     fontsLoadingPromise = null;
     return module.decorationFonts;
@@ -186,7 +209,7 @@ const KanjiCharacter = ({
         !interactive && styles.animation,
         interactive && animState === 'idle' && 'cursor-pointer'
       )}
-      aria-hidden="true"
+      aria-hidden='true'
       style={{
         color: styles.color,
         transformOrigin: 'center center',
@@ -220,16 +243,10 @@ const Decorations = ({
     let isMounted = true;
 
     const loadKanji = async () => {
-      const results = await Promise.all(
-        kanjiSources.map(async (level) => {
-          const response = await fetch(`/kanji/${level}.json`);
-          const data = (await response.json()) as RawKanjiEntry[];
-          return data.map((entry) => entry.kanjiChar);
-        })
-      );
-
+      // Use cached kanji chars to avoid refetching on every mount
+      const chars = await loadKanjiChars();
       if (!isMounted) return;
-      setKanjiList(shuffle(results.flat()));
+      setKanjiList(shuffle(chars));
     };
 
     void loadKanji();
@@ -244,15 +261,15 @@ const Decorations = ({
     animatingRef.current.add(index);
     playClick();
 
-    setAnimStates((prev) => new Map(prev).set(index, 'exploding'));
+    setAnimStates(prev => new Map(prev).set(index, 'exploding'));
 
     // Animation state transitions
     setTimeout(() => {
-      setAnimStates((prev) => new Map(prev).set(index, 'hidden'));
+      setAnimStates(prev => new Map(prev).set(index, 'hidden'));
       setTimeout(() => {
-        setAnimStates((prev) => new Map(prev).set(index, 'fading-in'));
+        setAnimStates(prev => new Map(prev).set(index, 'fading-in'));
         setTimeout(() => {
-          setAnimStates((prev) => {
+          setAnimStates(prev => {
             const next = new Map(prev);
             next.delete(index);
             return next;

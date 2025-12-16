@@ -4,6 +4,33 @@ import type {
   TranslationAPIError
 } from '../types';
 
+// Client-side cache to reduce API calls
+const clientCache = new Map<
+  string,
+  { response: TranslationAPIResponse; timestamp: number }
+>();
+const CLIENT_CACHE_TTL = 1000 * 60 * 30; // 30 minutes
+const MAX_CLIENT_CACHE_SIZE = 100;
+
+function getClientCacheKey(
+  text: string,
+  source: Language,
+  target: Language
+): string {
+  return `${source}:${target}:${text.trim()}`;
+}
+
+function cleanupClientCache() {
+  if (clientCache.size > MAX_CLIENT_CACHE_SIZE) {
+    const now = Date.now();
+    for (const [key, value] of clientCache) {
+      if (now - value.timestamp > CLIENT_CACHE_TTL) {
+        clientCache.delete(key);
+      }
+    }
+  }
+}
+
 /**
  * Error codes returned by the translation API
  */
@@ -90,8 +117,15 @@ export async function translate(
     throw error;
   }
 
+  // Check client-side cache first
+  const cacheKey = getClientCacheKey(text, sourceLanguage, targetLanguage);
+  const cached = clientCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CLIENT_CACHE_TTL) {
+    return cached.response;
+  }
+
   try {
-    const response = await fetch('/api/translate', {
+    const fetchResponse = await fetch('/api/translate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -103,19 +137,28 @@ export async function translate(
       })
     });
 
-    const data = await response.json();
+    const data = await fetchResponse.json();
 
     // Handle error responses
-    if (!response.ok) {
+    if (!fetchResponse.ok) {
       const error: TranslationAPIError = {
         code: data.code || ERROR_CODES.API_ERROR,
         message: data.message || getErrorMessage(data.code),
-        status: response.status
+        status: fetchResponse.status
       };
       throw error;
     }
 
-    return data as TranslationAPIResponse;
+    const translationResult = data as TranslationAPIResponse;
+
+    // Cache successful response
+    clientCache.set(cacheKey, {
+      response: translationResult,
+      timestamp: Date.now()
+    });
+    cleanupClientCache();
+
+    return translationResult;
   } catch (error) {
     // Re-throw if it's already a TranslationAPIError
     if (

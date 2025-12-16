@@ -2,6 +2,36 @@ import { NextRequest, NextResponse } from 'next/server';
 import Kuroshiro from 'kuroshiro';
 import KuromojiAnalyzer from 'kuroshiro-analyzer-kuromoji';
 
+// Simple in-memory cache for translations (reduces API calls)
+const translationCache = new Map<
+  string,
+  { translatedText: string; romanization?: string; timestamp: number }
+>();
+const CACHE_TTL = 1000 * 60 * 60; // 1 hour cache
+const MAX_CACHE_SIZE = 500;
+
+function getCacheKey(text: string, source: string, target: string): string {
+  return `${source}:${target}:${text}`;
+}
+
+function cleanupCache() {
+  if (translationCache.size > MAX_CACHE_SIZE) {
+    const now = Date.now();
+    for (const [key, value] of translationCache) {
+      if (now - value.timestamp > CACHE_TTL) {
+        translationCache.delete(key);
+      }
+    }
+    // If still too large, remove oldest entries
+    if (translationCache.size > MAX_CACHE_SIZE) {
+      const entries = Array.from(translationCache.entries());
+      entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+      const toRemove = entries.slice(0, entries.length - MAX_CACHE_SIZE / 2);
+      toRemove.forEach(([key]) => translationCache.delete(key));
+    }
+  }
+}
+
 interface TranslationRequestBody {
   text: string;
   sourceLanguage: 'en' | 'ja';
@@ -138,6 +168,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check cache first to reduce API calls
+    const cacheKey = getCacheKey(text.trim(), sourceLanguage, targetLanguage);
+    const cached = translationCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return NextResponse.json({
+        translatedText: cached.translatedText,
+        romanization: cached.romanization,
+        cached: true
+      });
+    }
+
     // Get API key from environment
     const apiKey = process.env.GOOGLE_TRANSLATE_API_KEY;
     if (!apiKey) {
@@ -218,6 +259,14 @@ export async function POST(request: NextRequest) {
         romanization = undefined;
       }
     }
+
+    // Cache the result
+    translationCache.set(cacheKey, {
+      translatedText: translation.translatedText,
+      romanization,
+      timestamp: Date.now()
+    });
+    cleanupCache();
 
     return NextResponse.json({
       translatedText: translation.translatedText,
