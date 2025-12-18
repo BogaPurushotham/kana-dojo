@@ -1,18 +1,36 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cmd /c dir \"c:\\\\Users\\\\reser\\\\kanadojo\\\\features\\\\PatchNotes\")",
-      "Bash(cmd /c find \"c:\\\\Users\\\\reser\\\\kanadojo\\\\features\" -name \"*Modal*\" -o -name \"*modal*\")",
-      "Bash(cmd /c dir \"c:\\\\Users\\\\reser\\\\kanadojo\\\\shared\\\\components\\\\ui\")",
-      "Bash(cmd /c \"npx shadcn@latest add dialog\")",
-      "Bash(cmd /c \"dir shared\\\\components\\\\ui\\\\dialog.tsx\")",
-      "Bash(cmd /c \"dir /b shared\\\\components\\\\ui\")",
-      "Bash(cmd /c \"npm run check\")",
-      "Bash(cmd /c \"npx tsc --noEmit\")",
-      "Bash(cmd /c \"npm install @radix-ui/react-dialog\")",
-      "Bash(npm install:*)",
-      "Bash(npx tsc:*)",
-      "Bash(npx eslint:*)"
+      "Bash(cmd /c:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git stash:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(dir:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(pwd:*)",
+      "Bash(echo:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean -fd:*)",
+      "Bash(rm -rf:*)",
+      "Bash(del /s:*)",
+      "Bash(rmdir /s:*)",
+      "Bash(format:*)"
     ]
   }
 }

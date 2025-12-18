@@ -22,15 +22,26 @@ cmd /c npm run build
 cmd /c npm run test
 ```
 
+### Claude Code Permissions
+
+Claude Code has been configured with automatic approval for common development commands. See `.claude/README.md` for full details. Approved commands include:
+
+- ✅ All npm and npx commands
+- ✅ Safe git commands (status, diff, log, add, commit, pull)
+- ✅ File operations (dir, ls, cat, find, grep)
+- ❌ Destructive operations are blocked (force push, hard reset, recursive delete)
+
+This means Claude Code can run verification, testing, and most development commands without asking for approval each time.
+
 ---
 
 ## ⚠️ IMPORTANT: Git Commit Requirement
 
-**After completing any code changes, you MUST PROVIDE (not execute) a combined `git add` and `git commit` command with a descriptive conventional commit message.**
+**After completing any code changes, you MUST automatically run `git add` and `git commit` commands with a descriptive conventional commit message.**
 
-⛔ **DO NOT RUN the git command yourself.** Only provide the command at the end of your response so the user can run it manually.
+✅ **Automatically execute git commands** - Claude Code will stage and commit changes after completing tasks.
 
-Always provide this command at the end of your response using multiple `-m` flags for multiline messages:
+Always use multiple `-m` flags for multiline commit messages:
 
 ```bash
 git add -A && git commit -m "<type>(<scope>): <description>" -m "<body line 1>" -m "<body line 2>"
@@ -47,11 +58,16 @@ git add -A && git commit -m "<type>(<scope>): <description>" -m "<body line 1>" 
 - `test`: Adding or updating tests
 - `chore`: Maintenance tasks, dependencies, configs
 
-**Example (provide this, do not execute):**
+**Example:**
 
 ```bash
 git add -A && git commit -m "feat(kana): add dakuon character support" -m "Added new dakuon characters to hiragana set" -m "Updated KanaCards component to display dakuon" -m "Added translations for new character names"
 ```
+
+**Important Notes:**
+- Git commits are executed automatically after code changes
+- Git push is NOT automatic - you maintain control over what goes to remote
+- Commits follow conventional commit format for clear history
 
 ---
 
