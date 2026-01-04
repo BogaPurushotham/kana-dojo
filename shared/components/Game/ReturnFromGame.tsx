@@ -36,7 +36,7 @@ interface StatItemProps {
 }
 
 const StatItem = ({ icon: Icon, value }: StatItemProps) => (
-  <p className='flex flex-row items-center gap-1 text-xl'>
+  <p className='flex flex-row items-center gap-0.75 sm:gap-1 text-xl'>
     <Icon />
     <span>{value}</span>
   </p>
@@ -101,7 +101,7 @@ const Return = ({ isHidden, href, gameMode }: ReturnProps) => {
       )}
     >
       {/* Header with exit and progress */}
-      <div className='flex w-full flex-row items-center justify-between gap-2 md:gap-4'>
+      <div className='flex w-full flex-row items-center justify-between gap-3 md:gap-4'>
         <Link href={href} ref={buttonRef} onClick={handleExit}>
           <X
             size={32}
@@ -134,7 +134,7 @@ const Return = ({ isHidden, href, gameMode }: ReturnProps) => {
         </p>
 
         {/* Stats display */}
-        <div className='flex w-1/2 flex-row items-center justify-end gap-1.5 py-2 text-[var(--secondary-color)] sm:gap-2 md:gap-3'>
+        <div className='flex w-1/2 flex-row items-center justify-end gap-2.5 py-2 text-[var(--secondary-color)] sm:gap-3'>
           <StatItem icon={SquareCheck} value={numCorrectAnswers} />
           <StatItem icon={SquareX} value={numWrongAnswers} />
           <StatItem icon={Flame} value={currentStreak} />
