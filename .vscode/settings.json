@@ -13,5 +13,10 @@
     ["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
     ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
   ],
-  "typescript.autoClosingTags": false
+  "typescript.autoClosingTags": false,
+  "i18n-ally.localesPaths": [
+    "core/i18n",
+    "scripts/i18n",
+    "core/i18n/locales"
+  ]
 }
